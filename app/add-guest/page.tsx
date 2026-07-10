@@ -14,17 +14,30 @@ export default function AddGuest() {
   const [selectedEventId, setSelectedEventId] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [tableNumber, setTableNumber] = useState(''); // Sehemu mpya ya meza
+  const [tableNumber, setTableNumber] = useState(''); 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [uploadingBulk, setUploadingBulk] = useState(false);
 
+  // MABADILIKO MAKUBWA: Kulinda fetch isifeli wakati wa Build kule Vercel
   useEffect(() => {
     const fetchEvents = async () => {
-      const { data, error } = await supabase.from('events').select('id, title');
-      if (!error && data) setEvents(data);
+      try {
+        // Kagua kama tuko kwenye kivinjari (Browser) na sio kipindi cha build server
+        if (typeof window !== 'undefined') {
+          const { data, error } = await supabase.from('events').select('id, title');
+          if (!error && data) {
+            setEvents(data);
+          } else if (error) {
+            console.error('Supabase Error:', error.message);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch events during build:', err);
+      }
     };
+    
     fetchEvents();
   }, []);
 
@@ -46,7 +59,7 @@ export default function AddGuest() {
         event_id: selectedEventId, 
         name, 
         phone, 
-        table_number: tableNumber || 'Haikupangwa', // Kama imeachwa wazi
+        table_number: tableNumber || 'Haikupangwa', 
         status: 'Pending' 
       }]);
     
@@ -90,7 +103,7 @@ export default function AddGuest() {
             event_id: selectedEventId,
             name: String(row.name || row.Jina).trim(),
             phone: String(row.phone || row.Simu).trim(),
-            table_number: String(row.table || row.Meza || 'Haikupangwa').trim(), // Inasoma na safu ya meza kwenye Excel
+            table_number: String(row.table || row.Meza || 'Haikupangwa').trim(), 
             status: 'Pending'
           }));
           
@@ -168,7 +181,6 @@ export default function AddGuest() {
               className="w-full p-2 bg-gray-800 border border-gray-700 rounded-xl text-xs focus:outline-none focus:border-blue-500"
               required={!uploadingBulk}
             />
-            {/* INPUT MPYA YA SEHEMU YA MEZA */}
             <input
               type="text"
               placeholder="Namba ya Meza (Mfano: Table 5)"
